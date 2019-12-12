@@ -2,10 +2,9 @@ package net.wangds.procengine.flow.instance.context;
 
 import net.wangds.procengine.flow.FlowContext;
 
-import java.io.Serializable;
 import java.util.Hashtable;
 
-public class HashTableContext extends Hashtable<String, Serializable> implements FlowContext {
+public class HashTableContext extends Hashtable<String, Object> implements FlowContext {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getBean(String key) {
@@ -13,7 +12,7 @@ public class HashTableContext extends Hashtable<String, Serializable> implements
     }
 
     @Override
-    public <T extends Serializable> void putBean(String key, T instance) {
+    public <T> void putBean(String key, T instance) {
         this.put(key, instance);
     }
 }

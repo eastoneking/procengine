@@ -11,6 +11,6 @@ public interface FlowContext extends ProcContext {
 
     <T> T getBean(String key);
 
-    <T extends Serializable> void putBean(String key, T instance);
+    <T> void putBean(String key, T instance);
 
 }

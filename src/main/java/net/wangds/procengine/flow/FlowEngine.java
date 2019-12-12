@@ -3,12 +3,14 @@ package net.wangds.procengine.flow;
 import net.wangds.procengine.ProcResEnum;
 import net.wangds.procengine.flow.define.FlowDef;
 import net.wangds.procengine.flow.define.actor.ActorDef;
+import net.wangds.procengine.flow.define.node.FlowNode;
 import net.wangds.procengine.flow.instance.FlowConstants;
 import net.wangds.procengine.flow.instance.FlowInstance;
 import net.wangds.procengine.flow.instance.SimpleFlowInstance;
 import net.wangds.procengine.flow.instance.actor.Actor;
 import net.wangds.procengine.flow.instance.context.HashTableContext;
 import net.wangds.procengine.flow.instance.step.FlowStep;
+import net.wangds.procengine.flow.instance.step.SimpleFlowStep;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -40,16 +42,23 @@ public class FlowEngine {
 
             SimpleFlowInstance<C, A> inst = new SimpleFlowInstance<>();
 
-            HashTableContext ctx = new HashTableContext();
-            ctx.put(FlowConstants.CTX_KEY_CONTEXT, ctx);
-
-            inst.setContext((C)ctx);
             inst.setOwner(actor);
             inst.setId(UUID.randomUUID().toString());
             inst.setFlowDefId(def.getFlowId());
             inst.setFlowDef(def);
 
             return inst;
+        }
+
+        public <C extends FlowContext, A extends ActorDef>  FlowStep<C> createFlowStepBy(C ctx, Actor actor, FlowInstance<C, A> instance, FlowNode node){
+            SimpleFlowStep<C> res = new SimpleFlowStep<>();
+
+            res.setId(UUID.randomUUID().toString());
+            res.setFlowInstanceId(instance.getId());
+            res.setOrganiger(instance.getOwner());
+            res.setStepOwner(actor);
+
+            return res;
         }
     }
 
@@ -72,10 +81,12 @@ public class FlowEngine {
 
 
     public static <C extends FlowContext, A extends ActorDef> ProcResEnum start(C ctx, Actor actor, FlowDef<A> flowDef) {
-
-
-
-        return ProcResEnum.CONTINUE;
+        FlowInstance<FlowContext, A> instance = combineFlowOperator.createFlowInstance(actor, flowDef);
+        if(ctx==null){
+            ctx = (C)new HashTableContext();
+        }
+        instance.setContext(ctx);
+        return instance.start();
     }
 
 
@@ -87,10 +98,22 @@ public class FlowEngine {
         return ProcResEnum.FINISH;
     }
 
+    public static <C extends FlowContext, A extends ActorDef>
+    ProcResEnum  run(C ctx, Actor actor, FlowInstance<C, A> instance, FlowNode node){
+
+        ActorDef actorDef = node.getActorDef();
+        if(actorDef.validate(actor)){
+
+            FlowStep<C> step = combineFlowOperator.createFlowStepBy(ctx, actor, instance, node);
+
+        }else{
+            return ProcResEnum.NO_PRIVILEGE;
+        }
+
+        return ProcResEnum.CONTINUE;
+    }
+
     public static <C extends FlowContext> ProcResEnum  run(C ctx, Actor actor, String flowInstanceId){
-
-
-
         return ProcResEnum.CONTINUE;
     }
 

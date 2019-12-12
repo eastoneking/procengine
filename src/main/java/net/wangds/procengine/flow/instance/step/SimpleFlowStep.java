@@ -1,8 +1,8 @@
 package net.wangds.procengine.flow.instance.step;
 
 import net.wangds.procengine.ProcResEnum;
-import net.wangds.procengine.flow.instance.actor.Actor;
 import net.wangds.procengine.flow.FlowContext;
+import net.wangds.procengine.flow.instance.actor.Actor;
 
 /**
  * 最简单的步骤实现.
@@ -13,11 +13,21 @@ public class SimpleFlowStep<C extends FlowContext> implements FlowStep<C> {
 
     private String id;
 
+    private String flowInstanceId;
+
     private String stepName;
 
     private ProcResEnum res;
 
+    /**
+     * 发起人.
+     */
     private Actor organiger;
+
+    /**
+     * 执行人.
+     */
+    private Actor stepOwner;
 
     private int errCode;
 
@@ -31,6 +41,11 @@ public class SimpleFlowStep<C extends FlowContext> implements FlowStep<C> {
     }
 
     @Override
+    public String getFlowInstanceId() {
+        return flowInstanceId;
+    }
+
+    @Override
     public String getStepName() {
         return stepName;
     }
@@ -38,6 +53,11 @@ public class SimpleFlowStep<C extends FlowContext> implements FlowStep<C> {
     @Override
     public Actor getOrganiger() {
         return organiger;
+    }
+
+    @Override
+    public Actor getStepOwner() {
+        return stepOwner;
     }
 
     @Override
@@ -88,5 +108,13 @@ public class SimpleFlowStep<C extends FlowContext> implements FlowStep<C> {
 
     public void setCause(Throwable cause) {
         this.cause = cause;
+    }
+
+    public void setFlowInstanceId(String flowInstanceId) {
+        this.flowInstanceId = flowInstanceId;
+    }
+
+    public void setStepOwner(Actor stepOwner) {
+        this.stepOwner = stepOwner;
     }
 }

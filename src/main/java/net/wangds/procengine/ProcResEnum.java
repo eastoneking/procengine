@@ -15,6 +15,10 @@ public enum ProcResEnum {
      */
     WAIT(0x50),
     /**
+     * 没有权限.
+     */
+    NO_PRIVILEGE(0x60),
+    /**
      * 正在执行, 一般异步执行步骤结果为此类型.
      */
     RUNNING(0x20),
