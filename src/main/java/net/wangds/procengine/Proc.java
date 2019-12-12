@@ -1,6 +1,8 @@
 package net.wangds.procengine;
 
-public interface Proc<C extends ProcContext> {
+import java.io.Serializable;
+
+public interface Proc<C extends ProcContext> extends Serializable {
 
     ProcResEnum proc(C ctx);
 
