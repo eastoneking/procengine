@@ -1,5 +1,6 @@
 package net.wangds.procengine.flow.instance;
 
+import net.wangds.log.helper.LogHelper;
 import net.wangds.procengine.ProcResEnum;
 import net.wangds.procengine.flow.FlowContext;
 import net.wangds.procengine.flow.FlowEngine;
@@ -89,6 +90,8 @@ public class SimpleFlowInstance<C extends FlowContext, A extends ActorDef> imple
             FlowNode startNode = startNodeOp.get();
             FlowEngine.run(this.getContext(), this.getOwner(), this, startNode);
             return this.currentStep.getRes();
+        }else{
+            LogHelper.debug("没有找到开始节点");
         }
 
         return ProcResEnum.FINISH;

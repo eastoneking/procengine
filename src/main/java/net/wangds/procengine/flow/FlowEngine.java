@@ -1,5 +1,6 @@
 package net.wangds.procengine.flow;
 
+import net.wangds.log.helper.LogHelper;
 import net.wangds.procengine.ProcResEnum;
 import net.wangds.procengine.flow.define.FlowDef;
 import net.wangds.procengine.flow.define.actor.ActorDef;
@@ -39,15 +40,13 @@ public class FlowEngine {
 
         @Override
         public <C extends FlowContext, A extends ActorDef> FlowInstance<C, A> createFlowInstance(Actor actor, FlowDef<A> def) {
-
-            SimpleFlowInstance<C, A> inst = new SimpleFlowInstance<>();
-
-            inst.setOwner(actor);
-            inst.setId(UUID.randomUUID().toString());
-            inst.setFlowDefId(def.getFlowId());
-            inst.setFlowDef(def);
-
-            return inst;
+            for(FlowOperator op:FLOW_OPERATORS){
+                FlowInstance<C, A> res = op.createFlowInstance(actor, def);
+                if(res!=null){
+                    return res;
+                }
+            }
+            return null;
         }
 
         public <C extends FlowContext, A extends ActorDef>  FlowStep<C> createFlowStepBy(C ctx, Actor actor, FlowInstance<C, A> instance, FlowNode node){
@@ -94,6 +93,8 @@ public class FlowEngine {
         Optional<FlowDef<A>> def = combineFlowOperator.findFlowDefById(flowDefId);
         if(def.isPresent()){
             return start(ctx, actor, def.get());
+        }else{
+            LogHelper.warn("无法找到编号为\""+flowDefId+"\"的流程定义");
         }
         return ProcResEnum.FINISH;
     }

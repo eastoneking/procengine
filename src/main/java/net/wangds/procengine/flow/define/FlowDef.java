@@ -1,22 +1,24 @@
 package net.wangds.procengine.flow.define;
 
+import net.wangds.procengine.flow.common.WithId;
 import net.wangds.procengine.flow.define.actor.ActorDef;
 import net.wangds.procengine.flow.define.node.FlowNode;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 流程定义.
  * @param <A> 流程所属参与者类型.
  */
-public interface FlowDef<A extends ActorDef> extends Serializable {
+public interface FlowDef<A extends ActorDef> extends Serializable, WithId<String> {
 
     /**
      * 流程Id.
      * @return 流程Id.
      */
-    String getFlowId();
+    String getId();
 
     /**
      * 流程名称.
@@ -39,6 +41,12 @@ public interface FlowDef<A extends ActorDef> extends Serializable {
      * @return 泳道参与者定义.
      */
     <AC extends ActorDef> AC fetchActor(int index);
+
+    void addFlowNode(FlowNode node);
+
+    void removeFlowNode(FlowNode node);
+
+    Optional<FlowNode> findNodeById(String nodeId);
 
     /**
      * 获得流程节点列表.
