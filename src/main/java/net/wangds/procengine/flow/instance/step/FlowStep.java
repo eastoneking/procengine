@@ -2,11 +2,9 @@ package net.wangds.procengine.flow.instance.step;
 
 import net.wangds.procengine.Proc;
 import net.wangds.procengine.ProcResEnum;
-import net.wangds.procengine.flow.define.actor.ActorDef;
-import net.wangds.procengine.flow.define.node.FlowNode;
-import net.wangds.procengine.flow.instance.FlowInstance;
-import net.wangds.procengine.flow.instance.actor.Actor;
 import net.wangds.procengine.flow.FlowContext;
+import net.wangds.procengine.flow.define.node.FlowNode;
+import net.wangds.procengine.flow.instance.actor.Actor;
 
 /**
  * 流程步骤.
@@ -32,6 +30,14 @@ public interface FlowStep<C extends FlowContext> extends Proc<C> {
      */
     Actor getStepOwner();
 
+    /**
+     * 流程定义.
+     * @return 流程定义.
+     */
+    FlowNode getFlowNode();
+
     ProcResEnum getRes();
+
+    void setRes(ProcResEnum res);
 
 }

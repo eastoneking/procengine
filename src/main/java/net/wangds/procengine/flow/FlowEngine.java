@@ -4,6 +4,7 @@ import net.wangds.log.helper.LogHelper;
 import net.wangds.procengine.ProcResEnum;
 import net.wangds.procengine.flow.define.FlowDef;
 import net.wangds.procengine.flow.define.actor.ActorDef;
+import net.wangds.procengine.flow.define.actor.AnonymousActorDef;
 import net.wangds.procengine.flow.define.node.FlowNode;
 import net.wangds.procengine.flow.instance.FlowConstants;
 import net.wangds.procengine.flow.instance.FlowInstance;
@@ -39,26 +40,27 @@ public class FlowEngine {
         }
 
         @Override
-        public <C extends FlowContext, A extends ActorDef> FlowInstance<C, A> createFlowInstance(Actor actor, FlowDef<A> def) {
+        public <C extends FlowContext, A extends ActorDef> Optional<FlowInstance<C, A>> createFlowInstance(Actor actor, FlowDef<A> def) {
             for(FlowOperator op:FLOW_OPERATORS){
-                FlowInstance<C, A> res = op.createFlowInstance(actor, def);
-                if(res!=null){
+                Optional<FlowInstance<C, A>> res = op.createFlowInstance(actor, def);
+                if(res.isPresent()){
                     return res;
                 }
             }
-            return null;
+            return Optional.empty();
         }
 
-        public <C extends FlowContext, A extends ActorDef>  FlowStep<C> createFlowStepBy(C ctx, Actor actor, FlowInstance<C, A> instance, FlowNode node){
-            SimpleFlowStep<C> res = new SimpleFlowStep<>();
-
-            res.setId(UUID.randomUUID().toString());
-            res.setFlowInstanceId(instance.getId());
-            res.setOrganiger(instance.getOwner());
-            res.setStepOwner(actor);
-
-            return res;
+        @Override
+        public <C extends FlowContext, A extends ActorDef> Optional<FlowStep<C>> generateFlowStep(FlowInstance<C, A> instance, FlowNode node, Actor actor) {
+            for(FlowOperator op:FLOW_OPERATORS){
+                Optional<FlowStep<C>> res = op.generateFlowStep(instance, node, actor);
+                if(res.isPresent()){
+                    return res;
+                }
+            }
+            return Optional.empty();
         }
+
     }
 
     private static final CombineFlowOperator combineFlowOperator = new FlowEngine.CombineFlowOperator();
@@ -80,12 +82,20 @@ public class FlowEngine {
 
 
     public static <C extends FlowContext, A extends ActorDef> ProcResEnum start(C ctx, Actor actor, FlowDef<A> flowDef) {
-        FlowInstance<FlowContext, A> instance = combineFlowOperator.createFlowInstance(actor, flowDef);
+        Optional<FlowInstance<FlowContext, A>> op = combineFlowOperator.createFlowInstance(actor, flowDef);
         if(ctx==null){
             ctx = (C)new HashTableContext();
         }
-        instance.setContext(ctx);
-        return instance.start();
+        if(op.isPresent()){
+            FlowInstance<FlowContext, A> instance;
+            instance = op.get();
+            instance.setContext(ctx);
+            return instance.start();
+        }else {
+            LogHelper.debug("创建流程实例为null，返回流程结束.");
+            return ProcResEnum.FINISH;
+        }
+
     }
 
 
@@ -103,15 +113,32 @@ public class FlowEngine {
     ProcResEnum  run(C ctx, Actor actor, FlowInstance<C, A> instance, FlowNode node){
 
         ActorDef actorDef = node.getActorDef();
+        if(actorDef==null){
+            actorDef = new AnonymousActorDef();
+        }
         if(actorDef.validate(actor)){
 
-            FlowStep<C> step = combineFlowOperator.createFlowStepBy(ctx, actor, instance, node);
+            Optional<FlowStep<C>> stepOp = combineFlowOperator.generateFlowStep(instance, node, actor);
+
+            if(stepOp.isPresent()){
+                FlowStep<C> step = stepOp.get();
+                instance.setCurrentStep(step);
+                step.proc(ctx);
+                ProcResEnum res = step.getRes();
+                if(res==null){
+                    res = ProcResEnum.CONTINUE;
+                }
+                step.setRes(res);
+                return res;
+            }else{
+                return ProcResEnum.FINISH;
+            }
+
+
 
         }else{
             return ProcResEnum.NO_PRIVILEGE;
         }
-
-        return ProcResEnum.CONTINUE;
     }
 
     public static <C extends FlowContext> ProcResEnum  run(C ctx, Actor actor, String flowInstanceId){

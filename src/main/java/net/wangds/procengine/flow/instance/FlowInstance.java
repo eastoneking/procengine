@@ -19,6 +19,8 @@ public interface FlowInstance<C extends FlowContext, A extends ActorDef> {
 
     FlowStep<C> getCurrentStep();
 
+    void setCurrentStep(FlowStep<C> step);
+
     C getContext();
 
     void setContext(C ctx);

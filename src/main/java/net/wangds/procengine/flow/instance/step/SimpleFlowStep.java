@@ -2,7 +2,12 @@ package net.wangds.procengine.flow.instance.step;
 
 import net.wangds.procengine.ProcResEnum;
 import net.wangds.procengine.flow.FlowContext;
+import net.wangds.procengine.flow.define.actor.ActorDef;
+import net.wangds.procengine.flow.define.node.FlowNode;
+import net.wangds.procengine.flow.instance.FlowInstance;
 import net.wangds.procengine.flow.instance.actor.Actor;
+
+import java.util.UUID;
 
 /**
  * 最简单的步骤实现.
@@ -28,6 +33,8 @@ public class SimpleFlowStep<C extends FlowContext> implements FlowStep<C> {
      * 执行人.
      */
     private Actor stepOwner;
+
+    private FlowNode flowNode;
 
     private int errCode;
 
@@ -116,5 +123,24 @@ public class SimpleFlowStep<C extends FlowContext> implements FlowStep<C> {
 
     public void setStepOwner(Actor stepOwner) {
         this.stepOwner = stepOwner;
+    }
+
+    @Override
+    public FlowNode getFlowNode() {
+        return flowNode;
+    }
+
+    public void setFlowNode(FlowNode flowNode) {
+        this.flowNode = flowNode;
+    }
+
+    public <A extends ActorDef> void initialize(FlowInstance<C, A> flow, FlowNode node, Actor owner) {
+        this.id = UUID.randomUUID().toString();
+        this.stepOwner=owner;
+        this.organiger=flow.getOwner();
+        this.flowInstanceId=flow.getId();
+        this.stepName=node.getTitle();
+        this.flowNode = node;
+
     }
 }
