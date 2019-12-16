@@ -1,8 +1,10 @@
 package net.wangds.procengine.flow.instance.step.groovy;
 
 import groovy.lang.GroovyClassLoader;
+import net.wangds.log.helper.LogHelper;
 import net.wangds.procengine.ProcResEnum;
 import net.wangds.procengine.flow.FlowContext;
+import net.wangds.procengine.flow.define.node.FlowNode;
 import net.wangds.procengine.flow.define.node.groovy.GroovyNode;
 import net.wangds.procengine.flow.instance.step.spring.SpringStep;
 import org.apache.commons.lang3.StringUtils;
@@ -18,20 +20,12 @@ import static net.wangds.procengine.flow.instance.step.groovy.GroovyStepConstant
  */
 public class GroovyStep<C extends FlowContext> extends SpringStep<C> {
 
-    private GroovyNode def;
-
-    /**
-     * 根据节点定义初始化执行步骤.
-     * @param node 节点定义.
-     */
-    public void init(GroovyNode node){
-        def = node;
-    }
-
     @Override
     public ProcResEnum proc(C ctx) {
-
+        LogHelper.debug(()->"执行GroovyStep："+this.getId());
+        GroovyNode def = (GroovyNode)this.getFlowNode();
         if(def==null){
+            LogHelper.debug(()->"执行GroovyStep："+this.getId()+",节点定义为空.");
             this.setRes(ProcResEnum.ERROR);
             return this.getRes();
         }
@@ -49,6 +43,7 @@ public class GroovyStep<C extends FlowContext> extends SpringStep<C> {
         ApplicationContext appCtx = getSpringApplicationContext();
 
         String script = def.getScript();
+        LogHelper.debug(()->"groovy脚本:"+script);
         if(StringUtils.isNotBlank(script)){
             ScriptContext c = scriptEngine.getContext();
 
@@ -95,6 +90,7 @@ public class GroovyStep<C extends FlowContext> extends SpringStep<C> {
                 this.setErrMsg("");
 
             } catch (ScriptException e) {
+                LogHelper.error(e);
                 this.setRes(ProcResEnum.ERROR);
                 this.setErrCode(ERR_CODE_SCRIPT_WRONG);
                 this.setErrMsg("");

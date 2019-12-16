@@ -13,6 +13,7 @@ import net.wangds.procengine.flow.instance.actor.Actor;
 import net.wangds.procengine.flow.instance.context.HashTableContext;
 import net.wangds.procengine.flow.instance.step.FlowStep;
 import net.wangds.procengine.flow.instance.step.SimpleFlowStep;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -86,16 +87,18 @@ public class FlowEngine {
         if(ctx==null){
             ctx = (C)new HashTableContext();
         }
-        if(op.isPresent()){
+        ProcResEnum res;
+        if (op.isPresent()) {
             FlowInstance<FlowContext, A> instance;
             instance = op.get();
             instance.setContext(ctx);
-            return instance.start();
-        }else {
+            res = instance.start();
+        } else {
             LogHelper.debug("创建流程实例为null，返回流程结束.");
-            return ProcResEnum.FINISH;
+            res = ProcResEnum.FINISH;
         }
 
+        return res;
     }
 
 
@@ -118,24 +121,45 @@ public class FlowEngine {
         }
         if(actorDef.validate(actor)){
 
-            Optional<FlowStep<C>> stepOp = combineFlowOperator.generateFlowStep(instance, node, actor);
+            ProcResEnum res = ProcResEnum.CONTINUE;
 
-            if(stepOp.isPresent()){
-                FlowStep<C> step = stepOp.get();
-                instance.setCurrentStep(step);
-                step.proc(ctx);
-                ProcResEnum res = step.getRes();
-                if(res==null){
-                    res = ProcResEnum.CONTINUE;
+            do {
+                Optional<FlowStep<C>> stepOp = combineFlowOperator.generateFlowStep(instance, node, actor);
+
+                if (stepOp.isPresent()) {
+                    FlowStep<C> step = stepOp.get();
+                    instance.setCurrentStep(step);
+                    step.proc(ctx);
+                    res = step.getRes();
+                    if (res == null) {
+                        res = ProcResEnum.CONTINUE;
+                    }
+                    step.setRes(res);
+
+                    if(res==ProcResEnum.CONTINUE){
+                        //设置下一步
+                        String nextId = node.getNextId();
+                        if(StringUtils.isBlank(nextId)){
+                            //没有定义下一步的认为流程已经结束
+                            res = ProcResEnum.FINISH;
+                        }else {
+                            Optional<FlowNode> nextNodeOp = combineFlowOperator.findFlowNode(instance, nextId);
+                            if(nextNodeOp.isPresent()){
+                                node = nextNodeOp.get();
+                            } else {
+                                //下一步节点不存在.
+                                res = ProcResEnum.FINISH;
+                            }
+                        }
+                    }
+
+                } else {
+                    res = ProcResEnum.FINISH;
                 }
-                step.setRes(res);
-                return res;
-            }else{
-                return ProcResEnum.FINISH;
-            }
 
+            }while(res==ProcResEnum.CONTINUE);
 
-
+            return res;
         }else{
             return ProcResEnum.NO_PRIVILEGE;
         }

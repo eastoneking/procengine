@@ -26,7 +26,7 @@ public class WithIdInstanceFinder<T, E extends WithId<T>> implements BiFunction<
             }
         }
 
-        return null;
+        return Optional.empty();
     }
 
 }

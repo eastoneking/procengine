@@ -2,9 +2,11 @@ package net.wangds.procengine.flow.define.node;
 
 import net.wangds.procengine.flow.define.actor.ActorDef;
 
+import java.util.UUID;
+
 public abstract class AbstractFlowNode implements  FlowNode {
 
-    private String id;
+    private String id = UUID.randomUUID().toString();
     private String nextId;
     private FlowNodeTypeEnum type;
     private String title;
