@@ -20,6 +20,7 @@ import net.wangds.procengine.flow.instance.context.HashTableContext;
 import net.wangds.procengine.flow.instance.step.FlowStep;
 import net.wangds.procengine.flow.instance.step.SimpleFlowStep;
 import net.wangds.procengine.flow.instance.step.groovy.GroovyStep;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import java.util.Optional;
@@ -40,13 +41,18 @@ public class GlobalTest {
                 FlowNode start = new StartFlowNode();
                 res.addFlowNode(start);
 
-                FlowNode n2 = new DefaultGroovyNode(res, "println '开始执行流程,上下文'+ctx", start);
-                FlowNode n3 = new DefaultGroovyNode(res, "ctx.text='abcd'", n2);
-                FlowNode n4 = new DefaultGroovyNode(res, "println ctx.text", n3);
-                FlowNode n5 = new DefaultGroovyNode(res,
-                        "import net.wangds.procengine.flow.define.node.StartFlowNode; " +
-                        "println new StartFlowNode()", n4);
+                if(StringUtils.equals(flowDefId,"test")) {
+                    FlowNode n2 = new DefaultGroovyNode(res, "println '开始执行流程,上下文'+ctx", start);
+                    FlowNode n3 = new DefaultGroovyNode(res, "ctx.text='abcd'", n2);
+                    FlowNode n4 = new DefaultGroovyNode(res, "println ctx.text", n3);
+                    FlowNode n5 = new DefaultGroovyNode(res,
+                            "import net.wangds.procengine.flow.define.node.StartFlowNode; " +
+                                    "println new StartFlowNode()", n4);
+                }
 
+                if(StringUtils.equals(flowDefId,"test1")) {
+                    FlowNode n4 = new DefaultGroovyNode(res, "println ctx.text", start);
+                }
 
                 return Optional.of(res);
             }
@@ -109,5 +115,6 @@ public class GlobalTest {
         });
 
         FlowEngine.start(new HashTableContext(), new AnonymousActor(), "test");
+        FlowEngine.start(new HashTableContext(), new AnonymousActor(), "test1");
     }
 }
